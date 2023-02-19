@@ -1,30 +1,36 @@
-# Telethon utility #pip install telethon
 from telethon import TelegramClient, events
 from telethon.tl.custom import Button
-
 import configparser # Library for reading from a configuration file, # pip install configparser
-
 import random # pip install random
 from random import randint
-
 import datetime # Library that we will need to get the day and time, #pip install datetime
 import requests # Library used to make requests to external services (the weather forecast one) # pip install requests
-
 
 #### Access credentials
 config = configparser.ConfigParser() # Define the method to read the configuration file
 config.read('config.ini') # read config.ini file
 
-api_id = config.get('default','api_id') # get the api id
-api_hash = config.get('default','api_hash') # get the api hash
-BOT_TOKEN = config.get('default','BOT_TOKEN') # get the bot token
-weather_key = config.get('default','weather_key') # read the key for the weather forecasts
+api_id = config.get('default','api_id')
+api_hash = config.get('default','api_hash')
+BOT_TOKEN = config.get('default','BOT_TOKEN') 
+weather_key = config.get('default','weather_key')
 
 # Create the client and the session called session_master. We start the session as the Bot (using bot_token)
+
 client = TelegramClient('sessions/session_master', api_id, api_hash).start(bot_token=BOT_TOKEN)
+# client = TelegramClient('Bot', api_id, api_hash).start(bot_token=BOT_TOKEN)
+
+client = TelegramClient('session_name', api_id, api_hash)
+
+@client.on(events.NewMessage)
+async def handle_new_message(event):
+    print(event.raw_text)
+    await client.start(webhook_url='https://yourserver.com/your-webhook-url')
 
 # Define the /start command
-@client.on(events.NewMessage(pattern='/(?i)start')) 
+#  @BotClient.on(events.NewMessage(pattern="^/string(?: |$)(.*)"))
+# @client.on(events.NewMessage(pattern='/(?i)start')) 
+@client.on(events.NewMessage(pattern='/start')) 
 async def start(event):
     sender = await event.get_sender()
     SENDER = sender.id
@@ -33,7 +39,6 @@ async def start(event):
         "\"<b>/weather CITY</b>\" → I will provide the weather forecast for the city you entered\n" +\
         "\"<b>/quiz</b>\" → Let's play together!\n" 
     await client.send_message(SENDER, text, parse_mode="HTML")
-
 
 
 ### First command, get the time and day
@@ -45,8 +50,6 @@ async def time(event):
     # Define the text and send the message
     text = "Received! Day and time: " + str(datetime.datetime.now())
     await client.send_message(SENDER, text, parse_mode="HTML")
-
-
 
 
 ### Command to get the weather
